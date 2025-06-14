@@ -1,0 +1,26 @@
+{
+  "name": "nogal",
+  "version": "1.0.0",
+  "description": "NoGAL - MAME game purging tool",
+  "main": "main.ts",
+  "module": "main.ts",
+  "type": "module",
+  "bin": {
+    "nogal": "./main.ts"
+  },
+  "scripts": {
+    "start": "bun run main.ts",
+    "build": "bun build --compile --minify --sourcemap --target bun main.ts --outfile nogal",
+    "dev": "bun --watch main.ts"
+  },
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "commander": "^14.0.0"
+  }
+}
