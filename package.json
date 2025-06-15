@@ -1,6 +1,6 @@
 {
   "name": "nogal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NoGAL - MAME game purging tool",
   "main": "main.ts",
   "module": "main.ts",

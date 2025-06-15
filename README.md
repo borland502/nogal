@@ -30,19 +30,19 @@ Options:
 ### Delete all games in the sports category (case insensitive) 
 
 ```shell
-nogal -ci "sports" --directory /b/roms/mame
+nogal --directory /mnt/b/roms/mame -c "sports" -i
 ```
 
 ### Delete all mature games from the directory by moving them to a backup directory
 
 ```shell
-nogal -d /b/roms/mame -b "~/backup"
+nogal -d /mnt/b/roms/mame -b "~/backup"
 ```
 
 ### List all games in the mature category
 
 ```shell
-nogal -lc "mature"
+nogal -d /mnt/b/roms/mame -c "mature" -l
 ```
 
 ## Categories
@@ -66,7 +66,7 @@ Fighter
 Gambling
 Game Console
 Handheld
-Mature
+* Mature *
 Maze
 Medal Game
 Medical Equipment

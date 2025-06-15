@@ -88,6 +88,28 @@ class NoGAL {
     }
   }
 
+  private async getVideoFiles(directory: string, romName: string): Promise<string[]> {
+    const videoDir = join(directory, 'video');
+    
+    if (!existsSync(videoDir)) {
+      return [];
+    }
+    
+    try {
+      const files = await readdir(videoDir);
+      const videoFiles = files.filter(file => {
+        const baseName = basename(file, extname(file));
+        // Look for files that match: <romName>-video.<extension>
+        return baseName === `${romName}-video`;
+      });
+      
+      return videoFiles.map(file => join(videoDir, file));
+    } catch (error) {
+      console.error(`Error reading video directory ${videoDir}:`, error);
+      return [];
+    }
+  }
+
   private getRomName(filename: string): string {
     // Remove extension and return base name
     return basename(filename, extname(filename));
@@ -159,8 +181,9 @@ class NoGAL {
     category?: string;
     caseInsensitive?: boolean;
     backup?: string;
+    deleteVideo?: boolean;
   }): Promise<void> {
-    const { directory, category, caseInsensitive = false, backup } = options;
+    const { directory, category, caseInsensitive = false, backup, deleteVideo = false } = options;
     
     if (!existsSync(directory)) {
       console.error(`Directory not found: ${directory}`);
@@ -215,8 +238,10 @@ class NoGAL {
     let successCount = 0;
     for (const file of gamesToDelete) {
       const sourcePath = join(directory, file);
+      const romName = this.getRomName(file);
       
       try {
+        // Handle ROM file
         if (backup) {
           const backupPath = join(backup, file);
           renameSync(sourcePath, backupPath);
@@ -225,6 +250,32 @@ class NoGAL {
           unlinkSync(sourcePath);
           console.log(`Deleted: ${file}`);
         }
+        
+        // Handle video files if flag is set
+        if (deleteVideo) {
+          const videoFiles = await this.getVideoFiles(directory, romName);
+          for (const videoPath of videoFiles) {
+            const videoFile = basename(videoPath);
+            try {
+              if (backup) {
+                // Create video subdirectory in backup if it doesn't exist
+                const backupVideoDir = join(backup, 'video');
+                if (!existsSync(backupVideoDir)) {
+                  mkdirSync(backupVideoDir, { recursive: true });
+                }
+                const backupVideoPath = join(backupVideoDir, videoFile);
+                renameSync(videoPath, backupVideoPath);
+                console.log(`Moved video: ${videoFile} -> ${backup}/video/`);
+              } else {
+                unlinkSync(videoPath);
+                console.log(`Deleted video: ${videoFile}`);
+              }
+            } catch (videoError) {
+              console.error(`Error ${backup ? 'moving' : 'deleting'} video ${videoFile}:`, videoError);
+            }
+          }
+        }
+        
         successCount++;
       } catch (error) {
         console.error(`Error ${backup ? 'moving' : 'deleting'} ${file}:`, error);
@@ -246,6 +297,7 @@ function main() {
     .option('-c, --category <category>', 'category to filter (default: mature games)')
     .option('-i, --case-insensitive', 'case insensitive category matching')
     .option('-l, --list', 'list matching games instead of deleting them')
+    .option('-o, --video', 'delete/move videos as well')
     .option('-b, --backup <path>', 'backup directory to move files instead of deleting')
     .action(async (options) => {
       const nogal = new NoGAL();
@@ -261,7 +313,8 @@ function main() {
           directory: options.directory,
           category: options.category,
           caseInsensitive: options.caseInsensitive,
-          backup: options.backup
+          backup: options.backup,
+          deleteVideo: options.video
         });
       }
     });
